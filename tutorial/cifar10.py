@@ -7,35 +7,39 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
+from torchvision import models
 
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        # self.conv1 = nn.Conv2d(3, 16, 5)
-        self.conv1 = nn.Conv2d(3, 6, 3)
-        self.conv2 = nn.Conv2d(6, 16, 3)
-        # self.conv2 = nn.Conv2d(16, 32, 5)
-        self.conv3 = nn.Conv2d(16, 24, 3)
-        self.conv4 = nn.Conv2d(24, 32, 3)
+        # Conv Layers
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+        self.conv2 = nn.Conv2d(16, 16, 3, padding=1)
+        self.conv3 = nn.Conv2d(16, 20, 3, padding=1)
+        self.conv4 = nn.Conv2d(20, 20, 3, padding=1)
+        self.conv5 = nn.Conv2d(20, 20, 3, padding=1)
+        self.conv6 = nn.Conv2d(20, 20, 3, padding=1)
+        # Pooling Layers
         self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(32 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        # Fully connected Layers
+        self.fc1 = nn.Linear(20 * 4 * 4, 10)
 
     def forward(self, x):
-        # x = self.pool(F.relu(self.conv1(x)))
-        # x = self.pool(F.relu(self.conv2(x)))
+        # 32*32*3
         x = F.relu(self.conv1(x))
         x = self.pool(F.relu(self.conv2(x)))
+        # 16*16*16
         x = F.relu(self.conv3(x))
         x = self.pool(F.relu(self.conv4(x)))
-        x = x.view(-1, 32 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-        # return F.log_softmax(x, dim=1)
+        # 8*8*20
+        x = F.relu(self.conv5(x))
+        x = self.pool(F.relu(self.conv6(x)))
+        # 4*4*20
+        # Fully connected layer
+        x = x.view(-1, 20 * 4 * 4)
+        x = self.fc1(x)
+        return F.log_softmax(x, dim=1)
 
 
 def imshow(img):
@@ -46,7 +50,7 @@ def imshow(img):
 
 
 def train(device, net, trainloader, lossfn, optimizer, scheduler):
-    for epoch in range(5):  # loop over the dataset multiple times
+    for epoch in range(20):  # loop over the dataset multiple times
         # Print Learning Rate
         print('Epoch:', epoch, 'LR:', scheduler.get_lr())
         running_loss = 0.0
@@ -122,8 +126,9 @@ def main():
     print("len(trainset) == {}".format(len(trainset)))
     print("len(testset) == {}".format(len(testset)))
     net = Net()
+    # net = models.vgg16(pretrained=True)
     net.to(device)
-    print(net.parameters)
+    print(net)
     lossfn = nn.CrossEntropyLoss()
     # Adam with beta1 = 0.9,
     # beta2 = 0.999, and learning_rate = 1e-3 or 5e-4
@@ -132,13 +137,13 @@ def main():
     # Adam = momentum + preventing overshooting
     # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999))
-    scheduler = StepLR(optimizer, step_size=3, gamma=0.1)
+    scheduler = StepLR(optimizer, step_size=5, gamma=0.1)
     train(device, net, trainloader, lossfn, optimizer, scheduler)
     test(testloader, net, classes, device)
 
 
 if __name__ == '__main__':
     main()
-    # 67.0
+    # 72.0 20 epochs
     # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py
     # https://cs.stanford.edu/people/karpathy/convnetjs/demo/cifar10.html
