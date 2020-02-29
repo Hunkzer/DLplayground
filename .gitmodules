@@ -1,0 +1,9 @@
+[submodule "EfficientDet.Pytorch"]
+	path = EfficientDet.Pytorch
+	url = https://github.com/toandaominh1997/EfficientDet.Pytorch.git
+[submodule "coco"]
+	path = coco
+	url = https://github.com/waleedka/coco.git
+[submodule "efficientdet"]
+	path = efficientdet
+	url = https://github.com/signatrix/efficientdet.git
